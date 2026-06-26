@@ -52,6 +52,10 @@ class TestCLI(unittest.TestCase):
         code, stdout, stderr = self._run(["cost", "gpt-4o", "abc", "500"])
         self.assertEqual(code, 2)
 
+    def test_cost_command_negative_tokens(self):
+        code, stdout, stderr = self._run(["cost", "gpt-4o", "-100", "500"])
+        self.assertEqual(code, 2)
+
     def test_compare_command_success(self):
         code, stdout, stderr = self._run(
             ["compare", "gpt-4o", "gpt-4o-mini", "100000", "50000"]

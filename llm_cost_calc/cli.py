@@ -73,6 +73,14 @@ def cmd_list(args: argparse.Namespace) -> int:
     return 0
 
 
+def _nonneg_int(arg: str) -> int:
+    """argparse type: a non-negative integer."""
+    value = int(arg)
+    if value < 0:
+        raise argparse.ArgumentTypeError(f"must be non-negative, got {value}")
+    return value
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="llm-cost-calc",
@@ -83,15 +91,15 @@ def build_parser() -> argparse.ArgumentParser:
     # cost
     p_cost = sub.add_parser("cost", help="Calculate cost for one model")
     p_cost.add_argument("model", help="Model name (e.g. gpt-4o)")
-    p_cost.add_argument("input", type=int, help="Number of input tokens")
-    p_cost.add_argument("output", type=int, help="Number of output tokens")
+    p_cost.add_argument("input", type=_nonneg_int, help="Number of input tokens")
+    p_cost.add_argument("output", type=_nonneg_int, help="Number of output tokens")
 
     # compare
     p_cmp = sub.add_parser("compare", help="Compare costs of two models")
     p_cmp.add_argument("model_a", help="First model name")
     p_cmp.add_argument("model_b", help="Second model name")
-    p_cmp.add_argument("input", type=int, help="Number of input tokens")
-    p_cmp.add_argument("output", type=int, help="Number of output tokens")
+    p_cmp.add_argument("input", type=_nonneg_int, help="Number of input tokens")
+    p_cmp.add_argument("output", type=_nonneg_int, help="Number of output tokens")
 
     # list
     p_lst = sub.add_parser("list", help="List all known models")

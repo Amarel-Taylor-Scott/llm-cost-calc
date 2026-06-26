@@ -14,6 +14,23 @@ class UnknownModelError(ValueError):
         super().__init__(f"unknown model: {model!r}")
 
 
+def _validate_tokens(input_tokens: int, output_tokens: int) -> None:
+    """Reject non-integer or negative token counts.
+
+    Token counts are conceptually unsigned quantities; allowing negatives
+    silently produced *negative* costs, which is never meaningful and can
+    mask caller bugs (e.g. an off-by-one in a tokeniser).
+    """
+    if not isinstance(input_tokens, int) or isinstance(input_tokens, bool):
+        raise TypeError("input_tokens must be an int")
+    if not isinstance(output_tokens, int) or isinstance(output_tokens, bool):
+        raise TypeError("output_tokens must be an int")
+    if input_tokens < 0:
+        raise ValueError(f"input_tokens must be non-negative, got {input_tokens}")
+    if output_tokens < 0:
+        raise ValueError(f"output_tokens must be non-negative, got {output_tokens}")
+
+
 @dataclass
 class CostResult:
     """Breakdown of a cost calculation for one model.
@@ -86,6 +103,10 @@ def cost(
     ------
     UnknownModelError
         When ``known_only=True`` and the model is not in the price table.
+    ValueError
+        When ``input_tokens`` or ``output_tokens`` is negative.
+    TypeError
+        When ``input_tokens`` or ``output_tokens`` is not an ``int``.
 
     Examples
     --------
@@ -93,6 +114,7 @@ def cost(
     >>> result.total_cost   # doctest: +ELLIPSIS
     0.7...
     """
+    _validate_tokens(input_tokens, output_tokens)
     if model not in _prices.PRICES:
         if known_only:
             raise UnknownModelError(model)

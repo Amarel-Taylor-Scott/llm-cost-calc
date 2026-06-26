@@ -136,5 +136,42 @@ class TestBlendedCost(unittest.TestCase):
         self.assertEqual(blended, full.total_cost)
 
 
+class TestTokenValidation(unittest.TestCase):
+    """Negative / non-integer token counts must never yield negative costs."""
+
+    def test_negative_input_tokens_raises(self):
+        with self.assertRaises(ValueError):
+            cost("gpt-4o", input_tokens=-1, output_tokens=0)
+
+    def test_negative_output_tokens_raises(self):
+        with self.assertRaises(ValueError):
+            cost("gpt-4o", input_tokens=0, output_tokens=-1)
+
+    def test_negative_tokens_raise_even_for_unknown_model(self):
+        # Validation happens before the unknown-model check, so the caller
+        # is told about the bad input regardless of model validity.
+        with self.assertRaises(ValueError):
+            cost("not-a-model", input_tokens=-100, output_tokens=0, known_only=False)
+
+    def test_non_int_tokens_raise_typeerror(self):
+        with self.assertRaises(TypeError):
+            cost("gpt-4o", input_tokens=1.5, output_tokens=0)
+        with self.assertRaises(TypeError):
+            cost("gpt-4o", input_tokens=0, output_tokens="100")
+
+    def test_bool_tokens_raise_typeerror(self):
+        # bool is a subclass of int but is not a meaningful token count.
+        with self.assertRaises(TypeError):
+            cost("gpt-4o", input_tokens=True, output_tokens=0)
+
+    def test_compare_rejects_negative_tokens(self):
+        with self.assertRaises(ValueError):
+            compare("gpt-4o", "gpt-4o-mini", input_tokens=-1, output_tokens=0)
+
+    def test_blended_cost_rejects_negative_tokens(self):
+        with self.assertRaises(ValueError):
+            blended_cost("gpt-4o", input_tokens=-1, output_tokens=0)
+
+
 if __name__ == "__main__":
     unittest.main()
